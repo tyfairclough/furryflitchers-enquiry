@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Furry Flitchers Enquiry App
 
-## Getting Started
+Mobile-first enquiry wizard (dog/cat/small pet) with:
 
-First, run the development server:
+- Step-by-step “one thing at a time” UX
+- MySQL persistence (Prisma)
+- Back-office at `/admin` (login + CRUD + enquiry review)
+- Suitability screening for dog enquiries (configurable breed rules)
+- Notifications: WhatsApp (Twilio) + customer confirmation email (SMTP)
+- Quiet anti-bot: honeypot + rate limiting + invisible hCaptcha
+
+## Local setup
+
+### Prerequisites
+
+- Node.js (20+)
+- A MySQL/MariaDB database you can connect to
+
+### 1) Install deps
+
+```bash
+npm install
+```
+
+### 2) Configure environment
+
+Copy `.env.example` → `.env` and fill values.
+
+Critical values:
+
+- `DATABASE_URL`: MySQL connection string
+- `SESSION_PASSWORD`: at least 32 characters (used for admin session cookie encryption)
+
+### 3) Create tables
+
+This repo includes an initial migration SQL at `prisma/migrations/0001_init.sql`.
+
+Run it with Prisma (uses `DATABASE_URL` from `prisma.config.ts`):
+
+```bash
+npx prisma db execute --file prisma/migrations/0001_init.sql
+```
+
+Or run it directly with your MySQL client.
+
+### 4) Seed an admin user
+
+Set env vars:
+
+- `ADMIN_SEED_USERNAME`
+- `ADMIN_SEED_PASSWORD`
+
+Then:
+
+```bash
+npm run db:seed
+```
+
+### 5) Run the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Hostinger deployment notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Hostinger shared hosting often has limited Node.js support. A VPS / Cloud plan with a persistent Node process is strongly recommended.
 
-## Learn More
+### App config
 
-To learn more about Next.js, take a look at the following resources:
+Set all environment variables from `.env.example` in Hostinger’s control panel.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Build & run
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Typical commands on the server:
 
-## Deploy on Vercel
+```bash
+npm ci
+npm run build
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Database / backups
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Create a dedicated MySQL user for the app with least-privilege access to the app schema.
+- Use scheduled backups (e.g. `mysqldump`) and keep off-host copies.
+
+## Back-office
+
+- URL: `/admin`
+- Use the seeded admin account to log in.
+- Manage:
+  - Breed rules (`/admin/breed-rules`)
+  - Animal types (`/admin/animal-types`)
+  - Settings (`/admin/settings`)
+  - Enquiries (`/admin/enquiries`)

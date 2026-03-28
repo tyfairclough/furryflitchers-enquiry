@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum PetType {
+  dog
+  cat
+  smallPet
+}
+
+enum EnquiryStatus {
+  new
+  reviewed
+  archived
+}
+
+enum DogSex {
+  male
+  female
+}
+
+enum Suitability {
+  accepted
+  rejected
+}
+
+enum BreedRuleType {
+  banned
+  maleNeuteredOnly
+  allowed
+}
+
+enum DogService {
+  daycare
+  boarding
+}
+
+enum BookingType {
+  holiday
+  regular
+  oneOff
+}
+
+enum SmallPetService {
+  popIn
+  boarding
+}
+
+enum CatService {
+  popIn
+}
+
+model Enquiry {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  status        EnquiryStatus @default(new)
+  petType       PetType
+
+  customerName  String
+  phone         String
+  email         String
+  agreedToTerms Boolean
+
+  bookingType   BookingType?
+
+  rawSubmission Json?
+  clientIp      String?       @db.VarChar(64)
+  userAgent     String?       @db.Text
+  botFlags      Json?
+
+  dogs          EnquiryDog[]
+  cat           EnquiryCat?
+  smallPets     EnquirySmallPet[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([petType])
+}
+
+model EnquiryDog {
+  id          String      @id @default(cuid())
+  enquiryId   String
+  enquiry     Enquiry     @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  name        String
+  breedRuleId String?
+  breedRule   BreedRule?  @relation(fields: [breedRuleId], references: [id], onDelete: SetNull)
+  ageMonths   Int
+  sex         DogSex
+  neutered    Boolean
+
+  suitability Suitability
+  rejectionReasonCode String? @db.VarChar(64)
+
+  service     DogService?
+
+  @@index([enquiryId])
+}
+
+model EnquiryCat {
+  id        String     @id @default(cuid())
+  enquiryId String     @unique
+  enquiry   Enquiry    @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  name      String
+  service   CatService @default(popIn)
+}
+
+model EnquirySmallPet {
+  id           String         @id @default(cuid())
+  enquiryId    String
+  enquiry      Enquiry        @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  name         String
+  animalTypeId String?
+  animalType   AnimalType?    @relation(fields: [animalTypeId], references: [id], onDelete: SetNull)
+
+  service      SmallPetService
+
+  @@index([enquiryId])
+}
+
+model BreedRule {
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  active    Boolean       @default(true)
+
+  breedName String        @unique
+  ruleType  BreedRuleType
+
+  dogs      EnquiryDog[]
+
+  @@index([active])
+  @@index([ruleType])
+}
+
+model AnimalType {
+  id        String      @id @default(cuid())
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  active    Boolean     @default(true)
+
+  name      String      @unique
+  pets      EnquirySmallPet[]
+
+  @@index([active])
+}
+
+model Setting {
+  key       String   @id
+  value     String   @db.LongText
+  updatedAt DateTime @updatedAt
+}
+
+enum AdminRole {
+  admin
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  username     String    @unique
+  passwordHash String
+  role         AdminRole @default(admin)
+  active       Boolean   @default(true)
+}
