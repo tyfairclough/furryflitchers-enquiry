@@ -3,11 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { SelectionButton } from "@/components/ui/SelectionButton";
 import { BreedAutocomplete } from "@/components/enquiry/BreedAutocomplete";
-import { Field, Select, TextInput } from "@/components/ui/Field";
+import { DogAgeRangeSlider } from "@/components/enquiry/DogAgeRangeSlider";
+import { DogSexCardPicker } from "@/components/enquiry/DogSexCardPicker";
+import { Field, TextInput } from "@/components/ui/Field";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { clearDraft, loadDraft, saveDraft } from "@/lib/localDraft";
+import { formatDogAgeBand } from "@/lib/dogAgeDisplay";
 import { useInvisibleHcaptcha } from "@/components/hcaptcha/InvisibleHcaptcha";
+import {
+  formatUkPhoneE164,
+  INVALID_UK_PHONE_HINT,
+  isValidUkPhoneNumber,
+} from "@/lib/ukPhone";
 
 type DogSex = "male" | "female";
 
@@ -48,6 +57,7 @@ type StepId =
   | "dogAge"
   | "dogSex"
   | "dogNeutered"
+  | "dogAddedSuccess"
   | "dogSuitability"
   | "service"
   | "bookingType"
@@ -155,6 +165,7 @@ export function DogWizard() {
       "dogAge",
       "dogSex",
       "dogNeutered",
+      "dogAddedSuccess",
       "dogSuitability",
       "service",
       "bookingType",
@@ -190,8 +201,10 @@ export function DogWizard() {
         return currentDog.sex === "male" || currentDog.sex === "female";
       case "dogNeutered":
         return currentDog.neutered !== null;
+      case "dogAddedSuccess":
+        return true;
       case "dogSuitability":
-        return suitability?.accepted ?? true;
+        return false;
       case "service":
         return draft.service === "boarding" || draft.service === "daycare";
       case "bookingType":
@@ -203,7 +216,7 @@ export function DogWizard() {
       case "customerName":
         return draft.customerName.trim().length > 0;
       case "phone":
-        return draft.phone.trim().length > 0;
+        return isValidUkPhoneNumber(draft.phone);
       case "email":
         return draft.email.trim().length > 3 && draft.email.includes("@");
       case "terms":
@@ -223,12 +236,29 @@ export function DogWizard() {
   function goBack() {
     const idx = stepOrder.indexOf(step);
     if (idx <= 0) return;
+    // After a pass we skip dogSuitability; back from service returns to the success screen.
+    if (step === "service" && suitability?.accepted) {
+      setStep("dogAddedSuccess");
+      return;
+    }
+    // Failure screen follows the success step in the array; back goes to dog details, not the success screen.
+    if (step === "dogSuitability") {
+      setStep("dogNeutered");
+      return;
+    }
     const prev = stepOrder[Math.max(0, idx - 1)];
     setStep(prev);
   }
 
   function addAnotherDog() {
-    addDogReturnStepRef.current = step === "review" ? "review" : "dogSuitability";
+    addDogReturnStepRef.current =
+      step === "review"
+        ? "review"
+        : step === "service"
+          ? "service"
+          : step === "dogAddedSuccess"
+            ? "dogAddedSuccess"
+            : "dogSuitability";
     setDraft((prev) => ({ ...prev, dogs: [...prev.dogs, defaultDog()] }));
     setDogIndex(draft.dogs.length);
     setStep("dogName");
@@ -292,7 +322,7 @@ export function DogWizard() {
             ? "regular"
             : "oneOff",
       customerName: draft.customerName.trim(),
-      phone: draft.phone.trim(),
+      phone: formatUkPhoneE164(draft.phone)!,
       email: draft.email.trim(),
       agreedToTerms: true as const,
       hp,
@@ -333,17 +363,16 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={backFromDogName}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
-        <Field label="Dog name">
+        <Field label="Your dog's name">
           <TextInput
             autoFocus
             value={currentDog.name}
@@ -372,22 +401,17 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={confirmBreedAndContinue}
         primaryAction={
-          <Button
-            type="button"
-            onClick={confirmBreedAndContinue}
-            disabled={!canContinue()}
-          >
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
         <Field
-          label="Dog breed"
+          label={`What breed of dog is ${dogLabel(currentDog, dogIndex)}?`}
           hint="Choose from the list or type a breed. If it is not listed, we will record it as Other/Crossbreed."
         >
           <BreedAutocomplete
@@ -405,29 +429,19 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
-        <Field
-          label="Dog age (months)"
-          hint="Puppies under 6 months cannot be accepted."
-        >
-          <TextInput
-            autoFocus
-            inputMode="numeric"
-            value={currentDog.ageMonths ?? ""}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              setDog({ ageMonths: Number.isFinite(n) ? n : null });
-            }}
-            placeholder="e.g. 18"
+        <Field label={`How old is ${dogLabel(currentDog, dogIndex)}?`}>
+          <DogAgeRangeSlider
+            value={currentDog.ageMonths}
+            onChange={(next) => setDog({ ageMonths: next })}
           />
         </Field>
       </WizardShell>
@@ -438,28 +452,20 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
-        <Field label="Dog sex">
-          <Select
-            autoFocus
+        <Field label={`What sex is ${dogLabel(currentDog, dogIndex)}?`}>
+          <DogSexCardPicker
             value={currentDog.sex}
-            onChange={(e) => setDog({ sex: e.target.value as DogSex })}
-          >
-            <option value="" disabled>
-              Select…
-            </option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </Select>
+            onChange={(sex) => setDog({ sex })}
+          />
         </Field>
       </WizardShell>
     );
@@ -469,57 +475,57 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={async () => {
+          const result = await runSuitabilityCheck();
+          if (result?.accepted) {
+            setStep("dogAddedSuccess");
+          } else {
+            setStep("dogSuitability");
+          }
+        }}
         primaryAction={
           <Button
-            type="button"
-            onClick={async () => {
-              await runSuitabilityCheck();
-              goNext();
-            }}
+            type="submit"
             disabled={!canContinue() || suitabilityLoading}
           >
             Continue
           </Button>
         }
       >
-        <Field label="Is your dog neutered?">
+        <Field label={`Is ${dogLabel(currentDog, dogIndex)} neutered?`}>
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <SelectionButton
               type="button"
-              variant={currentDog.neutered === true ? "primary" : "secondary"}
+              selected={currentDog.neutered === true}
               onClick={() => setDog({ neutered: true })}
             >
               Yes
-            </Button>
-            <Button
+            </SelectionButton>
+            <SelectionButton
               type="button"
-              variant={currentDog.neutered === false ? "primary" : "secondary"}
+              selected={currentDog.neutered === false}
               onClick={() => setDog({ neutered: false })}
             >
               No
-            </Button>
+            </SelectionButton>
           </div>
         </Field>
       </WizardShell>
     );
   }
 
-  if (step === "dogSuitability") {
-    const currentResult = suitability?.dogs?.[dogIndex];
-    const rejected = suitability && !suitability.accepted;
+  if (step === "dogAddedSuccess") {
+    const dogName = dogLabel(currentDog, dogIndex);
     return (
       <WizardShell
         title={title}
-        subtitle={`Dog ${dogIndex + 1} of ${draft.dogs.length}`}
-        stepLabel={`Dog ${dogIndex + 1}`}
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={() => setStep("service")}
         primaryAction={
-          <Button type="button" onClick={goNext}>
+          <Button type="submit" disabled={suitabilityLoading}>
             Continue
           </Button>
         }
@@ -529,51 +535,27 @@ export function DogWizard() {
           </Button>
         }
       >
+        <p className="text-center text-lg text-muted">
+          {dogName} has been added, you can continue or add another dog to your enquiry.
+        </p>
+      </WizardShell>
+    );
+  }
+
+  if (step === "dogSuitability") {
+    return (
+      <WizardShell
+        title={title}
+        stepProgress={stepProgress}
+        onBack={goBack}
+        onContinue={undefined}
+        primaryAction={null}
+      >
         <div className="grid gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">
-              Suitability check
-            </p>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void runSuitabilityCheck()}
-              disabled={suitabilityLoading}
-              className="px-3 py-2 text-xs"
-            >
-              {suitabilityLoading ? "Checking…" : "Re-check"}
-            </Button>
+          <p className="text-sm font-semibold text-muted">Suitability check</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {suitability?.rejectionMessage}
           </div>
-          {rejected ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              {suitability?.rejectionMessage}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-              Looks good so far.
-            </div>
-          )}
-          <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Current dog: <span className="font-medium">{dogLabel(currentDog, dogIndex)}</span>
-            {currentResult ? (
-              <>
-                {" "}
-                ·{" "}
-                <span className="font-medium">
-                  {currentResult.accepted ? "accepted" : "rejected"}
-                </span>
-              </>
-            ) : null}
-          </div>
-          {rejected ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setStep("dogName")}
-            >
-              Edit dog details
-            </Button>
-          ) : null}
         </div>
       </WizardShell>
     );
@@ -583,32 +565,36 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Choose a service"
-        stepLabel="Service"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
+          </Button>
+        }
+        secondaryAction={
+          <Button type="button" variant="secondary" onClick={addAnotherDog}>
+            Add another dog
           </Button>
         }
       >
         <Field label="Choose service">
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <SelectionButton
               type="button"
-              variant={draft.service === "boarding" ? "primary" : "secondary"}
+              selected={draft.service === "boarding"}
               onClick={() => setDraft((p) => ({ ...p, service: "boarding" }))}
             >
               Boarding
-            </Button>
-            <Button
+            </SelectionButton>
+            <SelectionButton
               type="button"
-              variant={draft.service === "daycare" ? "primary" : "secondary"}
+              selected={draft.service === "daycare"}
               onClick={() => setDraft((p) => ({ ...p, service: "daycare" }))}
             >
               Daycare
-            </Button>
+            </SelectionButton>
           </div>
         </Field>
       </WizardShell>
@@ -619,31 +605,39 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Choose booking type"
-        stepLabel="Booking"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
         <Field label="Booking type">
-          <Select
-            autoFocus
-            value={draft.bookingType}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, bookingType: e.target.value as BookingType }))
-            }
-          >
-            <option value="" disabled>
-              Select…
-            </option>
-            <option value="holiday">Holiday</option>
-            <option value="regular">Regular</option>
-            <option value="oneOff">One-off</option>
-          </Select>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <SelectionButton
+              type="button"
+              selected={draft.bookingType === "holiday"}
+              onClick={() => setDraft((p) => ({ ...p, bookingType: "holiday" }))}
+            >
+              Holiday
+            </SelectionButton>
+            <SelectionButton
+              type="button"
+              selected={draft.bookingType === "regular"}
+              onClick={() => setDraft((p) => ({ ...p, bookingType: "regular" }))}
+            >
+              Regular
+            </SelectionButton>
+            <SelectionButton
+              type="button"
+              selected={draft.bookingType === "oneOff"}
+              onClick={() => setDraft((p) => ({ ...p, bookingType: "oneOff" }))}
+            >
+              One-off
+            </SelectionButton>
+          </div>
         </Field>
       </WizardShell>
     );
@@ -653,17 +647,16 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Your details"
-        stepLabel="Customer"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
-        <Field label="Customer name">
+        <Field label="Your name">
           <TextInput
             autoFocus
             value={draft.customerName}
@@ -679,22 +672,34 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Your details"
-        stepLabel="Customer"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
-        <Field label="Phone number">
+        <Field
+          label="Phone number"
+          hint={
+            draft.phone.trim() !== "" && !isValidUkPhoneNumber(draft.phone)
+              ? INVALID_UK_PHONE_HINT
+              : undefined
+          }
+        >
           <TextInput
             autoFocus
             value={draft.phone}
             onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))}
-            placeholder="e.g. 07..."
+            placeholder="e.g. 07... or 01..."
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            aria-invalid={
+              draft.phone.trim() !== "" && !isValidUkPhoneNumber(draft.phone)
+            }
           />
         </Field>
       </WizardShell>
@@ -705,12 +710,11 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Your details"
-        stepLabel="Customer"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -732,12 +736,12 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        subtitle="Almost done"
         stepLabel="Terms"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -752,7 +756,7 @@ export function DogWizard() {
               }
               className="mt-1 h-4 w-4"
             />
-            <span className="text-sm text-foreground">
+            <span className="text-sm text-muted">
               I agree to the terms.
             </span>
           </label>
@@ -765,12 +769,12 @@ export function DogWizard() {
   return (
     <WizardShell
       title={title}
-      subtitle="Review your details"
       stepLabel="Review"
       stepProgress={stepProgress}
       onBack={goBack}
+      onContinue={submit}
       primaryAction={
-        <Button type="button" onClick={submit} disabled={suitabilityLoading}>
+        <Button type="submit" disabled={suitabilityLoading}>
           Submit
         </Button>
       }
@@ -797,8 +801,11 @@ export function DogWizard() {
           </p>
           <ul className="mt-2 grid gap-2">
             {draft.dogs.map((d, i) => (
-              <li key={d.id} className="rounded-xl border border-border p-3">
-                <div className="flex items-center justify-between">
+              <li
+                key={d.id}
+                className="rounded border border-muted-foreground bg-foreground p-3 text-card-foreground"
+              >
+                <div className="flex items-center justify-between text-muted">
                   <p className="font-semibold">{dogLabel(d, i)}</p>
                   <button
                     type="button"
@@ -812,7 +819,8 @@ export function DogWizard() {
                   </button>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {d.breed || "—"} · {d.ageMonths ?? "—"} months · {d.sex || "—"} ·{" "}
+                  {d.breed || "—"} · {formatDogAgeBand(d.ageMonths)} ·{" "}
+                  {d.sex || "—"} ·{" "}
                   {d.neutered === null ? "—" : d.neutered ? "neutered" : "not neutered"}
                 </p>
               </li>
@@ -825,22 +833,22 @@ export function DogWizard() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-3">
+        <div className="rounded border border-muted-foreground bg-card-foreground p-3 text-card-foreground">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Service
           </p>
-          <p className="mt-1 font-semibold">{draft.service || "—"}</p>
+          <p className="mt-1 font-semibold text-muted">{draft.service || "—"}</p>
           <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Booking type
           </p>
-          <p className="mt-1 font-semibold">{draft.bookingType || "—"}</p>
+          <p className="mt-1 font-semibold text-muted">{draft.bookingType || "—"}</p>
         </div>
 
-        <div className="rounded-xl border border-border p-3">
+        <div className="rounded border border-muted-foreground bg-card-foreground p-3 text-card-foreground">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Customer
           </p>
-          <p className="mt-1 font-semibold">{draft.customerName || "—"}</p>
+          <p className="mt-1 font-semibold text-muted">{draft.customerName || "—"}</p>
           <p className="mt-1 text-muted-foreground">{draft.phone || "—"}</p>
           <p className="mt-1 text-muted-foreground">{draft.email || "—"}</p>
         </div>

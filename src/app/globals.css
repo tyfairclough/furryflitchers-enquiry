@@ -3,10 +3,12 @@
 /*
   Furry Flitchers — screengrab-aligned tokens:
   Cream #F4EEE0, dark sage #4A615A, forest #55A373, mustard #E5C161, brick #C14E4E,
-  Montserrat (body/UI), Playfair Display (headings).
+  Montserrat (body/UI and headings), Raleway Medium (enquiry intro line).
 */
 
 :root {
+  --color-white: #ffffff;
+
   --background: #f4eee0;
   --foreground: #26322e;
 
@@ -19,7 +21,7 @@
   --border: #ddd5c8;
 
   --primary: #4a615a;
-  --primary-foreground: #ffffff;
+  --primary-foreground: var(--color-white);
 
   --secondary: #e5c161;
   --secondary-foreground: #26322e;
@@ -43,7 +45,7 @@
     --muted-foreground: #a8b5af;
     --border: #3d4f47;
     --primary: #6b8c83;
-    --primary-foreground: #0f1211;
+    --primary-foreground: var(--color-white);
     --secondary: #c9a94d;
     --secondary-foreground: #1a2420;
     --accent: #6abf85;
@@ -73,8 +75,10 @@
   --color-ring: var(--ring);
 
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
-  --font-heading: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-serif: var(--font-sans);
+  --font-heading: var(--font-sans);
+  /* Figma select-pet: Raleway Medium 15px for intro line */
+  --font-subtitle: var(--font-raleway), ui-sans-serif, system-ui, sans-serif;
 
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;

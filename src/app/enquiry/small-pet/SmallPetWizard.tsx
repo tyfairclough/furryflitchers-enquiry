@@ -7,6 +7,11 @@ import { Field, Select, TextInput } from "@/components/ui/Field";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { clearDraft, loadDraft, saveDraft } from "@/lib/localDraft";
 import { useInvisibleHcaptcha } from "@/components/hcaptcha/InvisibleHcaptcha";
+import {
+  formatUkPhoneE164,
+  INVALID_UK_PHONE_HINT,
+  isValidUkPhoneNumber,
+} from "@/lib/ukPhone";
 
 type SmallPetService = "popIn" | "boarding" | "";
 
@@ -75,7 +80,7 @@ export function SmallPetWizard() {
       case "customer":
         return (
           draft.customerName.trim().length > 0 &&
-          draft.phone.trim().length > 0 &&
+          isValidUkPhoneNumber(draft.phone) &&
           draft.email.trim().length > 3 &&
           draft.email.includes("@")
         );
@@ -106,7 +111,7 @@ export function SmallPetWizard() {
       petTypeName: draft.petType.trim(),
       service: draft.service === "boarding" ? "boarding" : "popIn",
       customerName: draft.customerName.trim(),
-      phone: draft.phone.trim(),
+      phone: formatUkPhoneE164(draft.phone)!,
       email: draft.email.trim(),
       agreedToTerms: true as const,
       hp,
@@ -137,12 +142,11 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        subtitle="One thing at a time."
-        stepLabel="Progress"
         stepProgress={stepProgress}
         backHref="/"
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -163,12 +167,12 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        subtitle="Pet type"
         stepLabel="Pet type"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -192,12 +196,11 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        subtitle="Choose service"
-        stepLabel="Service"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -225,18 +228,17 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        subtitle="Your details"
-        stepLabel="Customer"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
       >
         <div className="grid gap-4">
-          <Field label="Customer name">
+          <Field label="Your name">
             <TextInput
               autoFocus
               value={draft.customerName}
@@ -245,10 +247,24 @@ export function SmallPetWizard() {
               }
             />
           </Field>
-          <Field label="Phone number">
+          <Field
+            label="Phone number"
+            hint={
+              draft.phone.trim() !== "" && !isValidUkPhoneNumber(draft.phone)
+                ? INVALID_UK_PHONE_HINT
+                : undefined
+            }
+          >
             <TextInput
               value={draft.phone}
               onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))}
+              placeholder="e.g. 07... or 01..."
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              aria-invalid={
+                draft.phone.trim() !== "" && !isValidUkPhoneNumber(draft.phone)
+              }
             />
           </Field>
           <Field label="Email">
@@ -267,12 +283,12 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        subtitle="Terms"
         stepLabel="Terms"
         stepProgress={stepProgress}
         onBack={goBack}
+        onContinue={goNext}
         primaryAction={
-          <Button type="button" onClick={goNext} disabled={!canContinue()}>
+          <Button type="submit" disabled={!canContinue()}>
             Continue
           </Button>
         }
@@ -286,7 +302,7 @@ export function SmallPetWizard() {
             }
             className="mt-1 h-4 w-4"
           />
-          <span className="text-sm text-foreground">I agree to the terms.</span>
+          <span className="text-sm text-muted">I agree to the terms.</span>
         </label>
       </WizardShell>
     );
@@ -295,12 +311,12 @@ export function SmallPetWizard() {
   return (
     <WizardShell
       title="Small pet enquiry"
-      subtitle="Review"
       stepLabel="Review"
       stepProgress={stepProgress}
       onBack={goBack}
+      onContinue={submit}
       primaryAction={
-        <Button type="button" onClick={submit}>
+        <Button type="submit">
           Submit
         </Button>
       }

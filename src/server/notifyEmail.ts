@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { formatDogAgeBand } from "@/lib/dogAgeDisplay";
 
 export type EnquiryEmailSummary = {
   id: string;
@@ -54,7 +55,7 @@ export async function sendCustomerEnquiryEmail(summary: EnquiryEmailSummary) {
     lines.push("Dogs:");
     for (const d of summary.dogs) {
       lines.push(
-        `- ${d.name} (${d.breed}) · ${d.ageMonths} months · ${d.sex} · ${
+        `- ${d.name} (${d.breed}) · ${formatDogAgeBand(d.ageMonths)} · ${d.sex} · ${
           d.neutered ? "neutered" : "not neutered"
         }${d.service ? ` · service: ${d.service}` : ""}`,
       );

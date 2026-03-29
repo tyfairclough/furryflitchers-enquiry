@@ -10,8 +10,14 @@ import {
   shouldSkipHcaptchaForRequest,
   verifyHcaptchaToken,
 } from "@/server/hcaptcha";
+import { formatUkPhoneE164, isValidUkPhoneNumber } from "@/lib/ukPhone";
 
 export const runtime = "nodejs";
+
+const ukPhoneZ = z
+  .string()
+  .refine((s) => isValidUkPhoneNumber(s), { message: "Invalid UK phone number" })
+  .transform((s) => formatUkPhoneE164(s)!);
 
 const dogSchema = z.object({
   name: z.string().min(1),
@@ -28,7 +34,7 @@ const dogSubmitSchema = z.object({
   service: z.enum(["boarding", "daycare"]),
   bookingType: z.enum(["holiday", "regular", "oneOff"]),
   customerName: z.string().min(1),
-  phone: z.string().min(1),
+  phone: ukPhoneZ,
   email: z.string().email(),
   agreedToTerms: z.literal(true),
   hp: z.string().optional(),
@@ -41,7 +47,7 @@ const catSubmitSchema = z.object({
   catName: z.string().min(1),
   bookingType: z.enum(["holiday", "regular", "oneOff"]),
   customerName: z.string().min(1),
-  phone: z.string().min(1),
+  phone: ukPhoneZ,
   email: z.string().email(),
   agreedToTerms: z.literal(true),
   hp: z.string().optional(),
@@ -55,7 +61,7 @@ const smallPetSubmitSchema = z.object({
   petTypeName: z.string().min(1),
   service: z.enum(["popIn", "boarding"]),
   customerName: z.string().min(1),
-  phone: z.string().min(1),
+  phone: ukPhoneZ,
   email: z.string().email(),
   agreedToTerms: z.literal(true),
   hp: z.string().optional(),

@@ -31,7 +31,7 @@ export function AdminDeskSidebar({ username }: { username: string }) {
               key={href}
               href={href}
               className={[
-                "whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                "whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold uppercase tracking-wide transition-colors",
                 active
                   ? "bg-primary text-primary-foreground"
                   : "text-foreground hover:bg-muted/60",
@@ -46,14 +46,14 @@ export function AdminDeskSidebar({ username }: { username: string }) {
       <div className="mt-auto flex flex-col gap-2 border-t border-border p-4 lg:p-5">
         <Link
           href="/"
-          className="inline-flex items-center justify-center rounded-xl border border-border bg-background px-3 py-2 text-center text-sm font-semibold hover:bg-muted/30"
+          className="inline-flex items-center justify-center rounded-[4px] border border-foreground/20 bg-transparent px-3 py-2 text-center text-sm font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:border-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Back to enquiry
         </Link>
         <form action="/admin/logout" method="post">
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            className="inline-flex w-full items-center justify-center rounded-[4px] border border-transparent bg-[#4a6663] px-3 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a6663]"
           >
             Sign out
           </button>

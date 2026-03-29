@@ -6,9 +6,9 @@ export default function EnquirySectionLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <div className="flex min-h-dvh flex-col">
       <EnquirySiteHeader />
-      {children}
-    </>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+    </div>
   );
 }

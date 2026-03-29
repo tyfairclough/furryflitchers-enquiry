@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/server/db";
 import { Card } from "@/components/ui/Card";
+import { formatDogAgeBand } from "@/lib/dogAgeDisplay";
 
 export default async function AdminEnquiryDetailPage({
   params,
@@ -57,7 +58,8 @@ export default async function AdminEnquiryDetailPage({
                   <div key={d.id} className="rounded-xl border border-border p-3">
                     <p className="font-semibold">{d.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {d.breedRule?.breedName ?? "—"} · {d.ageMonths} months · {d.sex} ·{" "}
+                      {d.breedRule?.breedName ?? "—"} · {formatDogAgeBand(d.ageMonths)} ·{" "}
+                      {d.sex} ·{" "}
                       {d.neutered ? "neutered" : "not neutered"}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -115,7 +117,7 @@ export default async function AdminEnquiryDetailPage({
         <div className="mt-6 flex gap-3">
           <Link
             href="/admin/enquiries"
-            className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-muted/30"
+            className="inline-flex items-center justify-center rounded-[4px] border border-foreground/20 bg-transparent px-4 py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:border-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Back
           </Link>

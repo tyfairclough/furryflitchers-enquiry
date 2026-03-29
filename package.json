@@ -19,6 +19,7 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "bcryptjs": "^3.0.3",
     "iron-session": "^8.0.4",
+    "libphonenumber-js": "^1.12.41",
     "mysql2": "^3.20.0",
     "next": "16.2.1",
     "nodemailer": "^8.0.4",
