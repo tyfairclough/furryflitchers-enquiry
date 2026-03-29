@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "import:breeds": "tsx scripts/import-breed-rules-from-csv.ts"
   },
