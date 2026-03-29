@@ -47,12 +47,15 @@ export function EnquirySiteHeader() {
         ref={dialogRef}
         id="leave-enquiry-dialog"
         aria-labelledby={titleId}
-        className="w-[min(100%,28rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-lg backdrop:bg-foreground/40"
+        className="fixed left-1/2 top-1/2 z-[100] m-0 w-[min(100%,28rem)] max-h-[min(90dvh,calc(100dvh-2rem))] max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-6 text-lg text-muted shadow-lg backdrop:bg-foreground/40"
       >
-        <h2 id={titleId} className="font-heading text-xl font-semibold text-foreground">
+        <h2
+          id={titleId}
+          className="font-heading text-xl font-semibold text-[var(--color-white)]"
+        >
           Leave this page?
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-[var(--color-white)]">
           Are you sure you want to abandon your enquiry? Any progress on this form may be
           lost.
         </p>

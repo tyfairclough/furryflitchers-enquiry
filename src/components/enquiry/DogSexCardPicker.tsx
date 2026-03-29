@@ -30,7 +30,7 @@ export function DogSexCardPicker({
   onChange: (next: DogSexChoice) => void;
 }) {
   return (
-    <div className="flex w-full justify-center gap-6">
+    <div className="flex w-full flex-col gap-6 md:flex-row md:items-start md:justify-center md:gap-6">
       {cards.map(({ sex, title, src }) => {
         const selected = value === sex;
         return (
@@ -40,7 +40,8 @@ export function DogSexCardPicker({
             onClick={() => onChange(sex)}
             aria-pressed={selected}
             className={[
-              "flex max-w-[197px] min-w-0 flex-1 flex-col gap-2 rounded-[4px] text-left",
+              "flex min-w-0 w-full flex-row gap-2 rounded-[4px] text-left",
+              "md:max-w-[197px] md:flex-1 md:flex-col md:gap-2",
               "transition-[box-shadow] duration-200",
               "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
               selected
@@ -48,28 +49,30 @@ export function DogSexCardPicker({
                 : "",
             ].join(" ")}
           >
-            <div className="relative h-[198px] w-full overflow-hidden rounded-[4px]">
+            <div className="relative size-[100px] shrink-0 overflow-hidden rounded-[4px] md:h-[198px] md:w-full">
               <Image
                 src={src}
                 alt=""
                 fill
                 className="object-cover object-center"
-                sizes="(max-width: 448px) 42vw, 197px"
+                sizes="(max-width: 767px) 100px, 197px"
                 priority
               />
             </div>
-            <div
-              className={[
-                "flex h-12 w-full items-center justify-center gap-2 rounded-[4px] border bg-secondary text-secondary-foreground",
-                selected ? "border-primary/40" : "border-transparent",
-              ].join(" ")}
-            >
-              {selected ? (
-                <CheckIcon className="size-5 shrink-0 text-secondary-foreground" />
-              ) : null}
-              <span className="text-[15px] font-medium uppercase tracking-normal text-secondary-foreground">
-                {title}
-              </span>
+            <div className="flex min-h-[100px] min-w-0 flex-1 md:min-h-0 md:h-12 md:flex-none md:w-full">
+              <div
+                className={[
+                  "flex w-full flex-1 items-center justify-center gap-2 rounded-[4px] border bg-secondary text-secondary-foreground md:min-h-12",
+                  selected ? "border-primary/40" : "border-transparent",
+                ].join(" ")}
+              >
+                {selected ? (
+                  <CheckIcon className="size-5 shrink-0 text-secondary-foreground" />
+                ) : null}
+                <span className="text-[15px] font-medium uppercase tracking-normal text-secondary-foreground">
+                  {title}
+                </span>
+              </div>
             </div>
           </button>
         );

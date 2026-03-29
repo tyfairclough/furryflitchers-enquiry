@@ -283,7 +283,7 @@ export function SmallPetWizard() {
     return (
       <WizardShell
         title="Small pet enquiry"
-        stepLabel="Terms"
+        stepLabel="Progress"
         stepProgress={stepProgress}
         onBack={goBack}
         onContinue={goNext}
@@ -311,22 +311,13 @@ export function SmallPetWizard() {
   return (
     <WizardShell
       title="Small pet enquiry"
-      stepLabel="Review"
+      stepLabel="Review your enquiry"
       stepProgress={stepProgress}
       onBack={goBack}
       onContinue={submit}
       primaryAction={
         <Button type="submit">
           Submit
-        </Button>
-      }
-      secondaryAction={
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => clearDraft("smallPet")}
-        >
-          Clear draft
         </Button>
       }
     >
@@ -354,8 +345,8 @@ export function SmallPetWizard() {
             Customer
           </p>
           <p className="mt-1 font-semibold">{draft.customerName || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.phone || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.email || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.phone || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.email || "—"}</p>
         </div>
       </div>
     </WizardShell>

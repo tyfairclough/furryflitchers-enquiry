@@ -279,7 +279,7 @@ export function CatWizard() {
     return (
       <WizardShell
         title="Cat enquiry"
-        stepLabel="Terms"
+        stepLabel="Progress"
         stepProgress={stepProgress}
         onBack={goBack}
         onContinue={goNext}
@@ -307,18 +307,13 @@ export function CatWizard() {
   return (
     <WizardShell
       title="Cat enquiry"
-      stepLabel="Review"
+      stepLabel="Review your enquiry"
       stepProgress={stepProgress}
       onBack={goBack}
       onContinue={submit}
       primaryAction={
         <Button type="submit">
           Submit
-        </Button>
-      }
-      secondaryAction={
-        <Button type="button" variant="secondary" onClick={() => clearDraft("cat")}>
-          Clear draft
         </Button>
       }
     >
@@ -346,8 +341,8 @@ export function CatWizard() {
             Customer
           </p>
           <p className="mt-1 font-semibold">{draft.customerName || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.phone || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.email || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.phone || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.email || "—"}</p>
         </div>
       </div>
     </WizardShell>

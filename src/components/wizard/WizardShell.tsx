@@ -109,7 +109,7 @@ export function WizardShell({
   const body = (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="mb-7 shrink-0">
+        <header className="mb-7 shrink-0 px-1">
           <h1 className="text-2xl font-semibold uppercase tracking-[3px] text-muted">
             {title}
           </h1>
@@ -135,7 +135,7 @@ export function WizardShell({
 
         <section
           className={[
-            "min-h-0 flex-1 overflow-y-auto text-foreground",
+            "min-h-0 flex-1 overflow-y-auto px-1 pt-1 text-foreground",
             hasActionFooter
               ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
               : "pb-4",

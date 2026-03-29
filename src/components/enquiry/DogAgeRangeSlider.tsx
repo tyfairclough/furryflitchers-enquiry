@@ -138,11 +138,13 @@ export function DogAgeRangeSlider({
               <div
                 key={`label-${band}`}
                 className={[
-                  "flex-1 text-xs leading-4",
+                  "flex-1 leading-4 text-sm",
                   labelTextAlign[i],
                   isActive
                     ? "font-semibold text-muted"
-                    : "text-muted-foreground",
+                    : i === 0
+                      ? "text-[color:var(--muted)]"
+                      : "text-muted-foreground",
                 ].join(" ")}
               >
                 {dogAgeBandLabel(band)}

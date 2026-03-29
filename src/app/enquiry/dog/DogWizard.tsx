@@ -104,6 +104,13 @@ function dogLabel(dog: DogDraft, index: number) {
   return dog.name?.trim() ? dog.name.trim() : `Dog ${index + 1}`;
 }
 
+function bookingTypeLabel(bt: BookingType): string {
+  if (bt === "holiday") return "Holiday";
+  if (bt === "regular") return "Regular";
+  if (bt === "oneOff") return "One-off";
+  return "—";
+}
+
 export function DogWizard() {
   const router = useRouter();
   const { execute: executeCaptcha, element: captchaEl } = useInvisibleHcaptcha();
@@ -736,7 +743,7 @@ export function DogWizard() {
     return (
       <WizardShell
         title={title}
-        stepLabel="Terms"
+        stepLabel="Progress"
         stepProgress={stepProgress}
         onBack={goBack}
         onContinue={goNext}
@@ -769,18 +776,13 @@ export function DogWizard() {
   return (
     <WizardShell
       title={title}
-      stepLabel="Review"
+      stepLabel="Review your enquiry"
       stepProgress={stepProgress}
       onBack={goBack}
       onContinue={submit}
       primaryAction={
         <Button type="submit" disabled={suitabilityLoading}>
           Submit
-        </Button>
-      }
-      secondaryAction={
-        <Button type="button" variant="secondary" onClick={() => clearDraft("dog")}>
-          Clear draft
         </Button>
       }
     >
@@ -795,21 +797,21 @@ export function DogWizard() {
         aria-hidden="true"
       />
       <div className="grid gap-4 text-sm text-foreground">
-        <div>
+        <div className="bg-foreground p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Dogs
+            Your dogs
           </p>
           <ul className="mt-2 grid gap-2">
             {draft.dogs.map((d, i) => (
               <li
                 key={d.id}
-                className="rounded border border-muted-foreground bg-foreground p-3 text-card-foreground"
+                className="rounded-none border-0 border-b border-solid border-secondary py-3 px-0 text-card-foreground"
               >
                 <div className="flex items-center justify-between text-muted">
                   <p className="font-semibold">{dogLabel(d, i)}</p>
                   <button
                     type="button"
-                    className="text-xs font-semibold text-muted-foreground underline underline-offset-2"
+                    className="text-xs font-semibold text-muted underline underline-offset-2"
                     onClick={() => {
                       setDogIndex(i);
                       setStep("dogName");
@@ -818,7 +820,7 @@ export function DogWizard() {
                     Edit
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted">
                   {d.breed || "—"} · {formatDogAgeBand(d.ageMonths)} ·{" "}
                   {d.sex || "—"} ·{" "}
                   {d.neutered === null ? "—" : d.neutered ? "neutered" : "not neutered"}
@@ -833,24 +835,28 @@ export function DogWizard() {
           </div>
         </div>
 
-        <div className="rounded border border-muted-foreground bg-card-foreground p-3 text-card-foreground">
+        <div className="rounded-none bg-card-foreground p-3 text-card-foreground">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Service
           </p>
-          <p className="mt-1 font-semibold text-muted">{draft.service || "—"}</p>
+          <p className="mt-1 font-semibold capitalize text-muted">
+            {draft.service || "—"}
+          </p>
           <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Booking type
           </p>
-          <p className="mt-1 font-semibold text-muted">{draft.bookingType || "—"}</p>
+          <p className="mt-1 font-semibold text-muted">
+            {bookingTypeLabel(draft.bookingType)}
+          </p>
         </div>
 
-        <div className="rounded border border-muted-foreground bg-card-foreground p-3 text-card-foreground">
+        <div className="rounded-none bg-card-foreground p-3 text-card-foreground">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Customer
+            Your details
           </p>
           <p className="mt-1 font-semibold text-muted">{draft.customerName || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.phone || "—"}</p>
-          <p className="mt-1 text-muted-foreground">{draft.email || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.phone || "—"}</p>
+          <p className="mt-1 text-[color:var(--muted)]">{draft.email || "—"}</p>
         </div>
       </div>
     </WizardShell>

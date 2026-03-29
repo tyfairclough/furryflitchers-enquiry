@@ -18,7 +18,7 @@ export default async function EnquiryThanksPage({
         </p>
       </header>
 
-      <section className="border border-muted-foreground bg-card-foreground p-5 text-foreground">
+      <section className="bg-card-foreground p-5 text-foreground">
         <div className="grid gap-2 text-sm text-muted">
           {petType ? (
             <p>
