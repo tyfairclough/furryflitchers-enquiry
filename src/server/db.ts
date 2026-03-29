@@ -7,6 +7,24 @@ const globalForPrisma = globalThis as unknown as {
 
 function createAdapter() {
   const connectionString = process.env.DATABASE_URL;
+  // #region agent log
+  fetch("http://127.0.0.1:7843/ingest/5ec9ede7-310b-411e-9b5a-829c3425a0fe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "c266af",
+    },
+    body: JSON.stringify({
+      sessionId: "c266af",
+      runId: "post-fix",
+      hypothesisId: "B",
+      location: "db.ts:createAdapter",
+      message: "createAdapter",
+      data: { hasDatabaseUrl: Boolean(connectionString) },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (!connectionString) throw new Error("DATABASE_URL is required");
   const url = new URL(connectionString);
 
